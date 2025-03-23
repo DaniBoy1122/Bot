@@ -69,6 +69,18 @@ function createAndConnectBot() {
         console.log('🔄 Bot disconnected. Restarting in 10 seconds...');
         setTimeout(createAndConnectBot, 10000); // Restart bot
     });
+
+    // Additional logging for debugging
+    bot.on('message', (message) => {
+        console.log(`💬 Message from server: ${message}`);
+    });
+
+    bot.on('error', (err) => {
+        console.error(`❗ Error details: `, err);
+        if (err.message.includes('version')) {
+            console.error(`❗ 'version' property error: `, err);
+        }
+    });
 }
 
 // Start the bot
