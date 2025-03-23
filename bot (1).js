@@ -3,9 +3,9 @@ const { pathfinder, Movements, goals: { GoalBlock } } = require('mineflayer-path
 const { Vec3 } = require('vec3');
 
 // Configure your bot's settings
-const botUsername = 'YourBotName'; // Change this to your bot's name
-const serverHost = 'your.server.ip'; // Replace with your server IP
-const serverPort = 25565; // Change if using a custom port
+const botUsername = 'SMP_8Green_Bot'; // Change this to your bot's name
+const serverHost = 'SMP_8Green_Bot.aternos.me'; // Replace with your server IP
+const serverPort = 34118; // Change if using a custom port
 
 function createBot() {
   const bot = mineflayer.createBot({
