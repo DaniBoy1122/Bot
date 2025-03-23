@@ -16,6 +16,7 @@ const offlineUUID = getOfflineUUID(botUsername); // If using offline mode
 
 // Function to create and connect the bot
 function createAndConnectBot() {
+    console.log('Creating bot...');
     const bot = createBot({
         host: 'SMP_8Green.aternos.me', // Replace with your server IP
         port: 34118, // Change if using a custom port
@@ -28,6 +29,7 @@ function createAndConnectBot() {
         }
     });
 
+    console.log('Bot created, loading plugins...');
     bot.loadPlugin(pathfinder);
 
     // Handle bot connection
@@ -38,9 +40,13 @@ function createAndConnectBot() {
     // Handle errors and reconnection
     bot.on('error', (err) => {
         console.log(`⚠️ Bot error: ${err.message}`);
+        console.error(`❗ Full error details: `, err);
         if (err.code === 'ECONNRESET') {
             console.log('🔄 Connection lost, reconnecting...');
             setTimeout(createAndConnectBot, 5000); // Reconnect bot
+        }
+        if (err.message.includes('version')) {
+            console.error(`❗ 'version' property error: `, err);
         }
     });
 
@@ -73,13 +79,6 @@ function createAndConnectBot() {
     // Additional logging for debugging
     bot.on('message', (message) => {
         console.log(`💬 Message from server: ${message}`);
-    });
-
-    bot.on('error', (err) => {
-        console.error(`❗ Error details: `, err);
-        if (err.message.includes('version')) {
-            console.error(`❗ 'version' property error: `, err);
-        }
     });
 }
 
