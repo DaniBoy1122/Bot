@@ -1,86 +1,58 @@
-const { createBot } = require('mineflayer');
-const { pathfinder, goals: { GoalBlock } } = require('mineflayer-pathfinder');
-const crypto = require('crypto');
+const mineflayer = require('mineflayer');
+const { pathfinder, Movements, goals: { GoalBlock } } = require('mineflayer-pathfinder');
+const { Vec3 } = require('vec3');
 
-// Function to generate a fixed UUID in offline mode
-function getOfflineUUID(username) {
-    const hash = crypto.createHash('md5').update("OfflinePlayer:" + username).digest('hex');
-    return hash.substr(0, 8) + '-' + hash.substr(8, 4) + '-' + hash.substr(12, 4) + '-' +
-           hash.substr(16, 4) + '-' + hash.substr(20);
-}
+// Configure your bot's settings
+const botUsername = 'YourBotName'; // Change this to your bot's name
+const serverHost = 'your.server.ip'; // Replace with your server IP
+const serverPort = 25565; // Change if using a custom port
 
-// Set bot username and UUID
-const botUsername = 'SMP_8Green_B0T'; // Change this to your bot's name
-const botUUID = '259FA7C3-49B2-483B-8A26-8B7A716B04E7'; // Fixed UUID
-const offlineUUID = getOfflineUUID(botUsername); // If using offline mode
+function createBot() {
+  const bot = mineflayer.createBot({
+    host: serverHost,
+    port: serverPort,
+    username: botUsername,
+  });
 
-// Function to create and connect the bot
-function createAndConnectBot() {
-    console.log('Creating bot...');
-    const bot = createBot({
-        host: 'SMP_8Green.aternos.me', // Replace with your server IP
-        port: 34118, // Change if using a custom port
-        username: botUsername,
-        auth: 'auth', // Use 'microsoft' for official accounts
-        profiles: {
-            mojang: {
-                uuid: botUUID, // Use fixed UUID
-            }
-        }
-    });
+  bot.loadPlugin(pathfinder);
 
-    console.log('Bot created, loading plugins...');
-    bot.loadPlugin(pathfinder);
+  // Log when the bot successfully logs in
+  bot.on('login', () => {
+    console.log(`✅ Bot ${botUsername} logged in`);
+  });
 
-    // Handle bot connection
-    bot.on('login', () => {
-        console.log(`✅ Bot ${botUsername} logged in with UUID: ${botUUID}`);
-    });
+  // Handle errors
+  bot.on('error', (err) => {
+    console.error(`⚠️ Bot error: ${err.message}`);
+  });
 
-    // Handle errors and reconnection
-    bot.on('error', (err) => {
-        console.log(`⚠️ Bot error: ${err.message}`);
-        console.error(`❗ Full error details: `, err);
-        if (err.code === 'ECONNRESET') {
-            console.log('🔄 Connection lost, reconnecting...');
-            setTimeout(createAndConnectBot, 5000); // Reconnect bot
-        }
-        if (err.message.includes('version')) {
-            console.error(`❗ 'version' property error: `, err);
-        }
-    });
+  // Handle kicks
+  bot.on('kicked', (reason) => {
+    console.log(`❌ Bot was kicked: ${reason}`);
+  });
 
-    // Handle bot kicks
-    bot.on('kicked', (reason) => {
-        console.log(`❌ Bot was kicked: ${reason}`);
-        console.log('🔄 Reconnecting bot in 60 seconds...');
-        setTimeout(createAndConnectBot, 60000); // Reconnect bot
-    });
+  // Set up random movement
+  bot.on('spawn', () => {
+    console.log('🟢 Bot spawned in the world!');
+    const defaultMove = new Movements(bot);
+    bot.pathfinder.setMovements(defaultMove);
 
-    // Handle movement
-    bot.on('spawn', () => {
-        console.log('🟢 Bot spawned in the world!');
+    function moveRandomly() {
+      const x = bot.entity.position.x + (Math.random() * 10 - 5);
+      const z = bot.entity.position.z + (Math.random() * 10 - 5);
+      const y = bot.entity.position.y;
+      bot.pathfinder.setGoal(new GoalBlock(x, y, z));
+    }
 
-        function moveRandomly() {
-            const x = bot.entity.position.x + (Math.random() * 10 - 5);
-            const z = bot.entity.position.z + (Math.random() * 10 - 5);
-            bot.pathfinder.setGoal(new GoalBlock(x, bot.entity.position.y, z));
-        }
+    setInterval(moveRandomly, 5000); // Move every 5 seconds
+  });
 
-        setInterval(moveRandomly, 5000); // Move every 5 seconds
-    });
-
-    // Keep bot alive
-    bot.on('end', () => {
-        console.log('🔄 Bot disconnected. Restarting in 10 seconds...');
-        setTimeout(createAndConnectBot, 10000); // Restart bot
-    });
-
-    // Additional logging for debugging
-    bot.on('message', (message) => {
-        console.log(`💬 Message from server: ${message}`);
-    });
+  // Reconnect on end
+  bot.on('end', () => {
+    console.log('🔄 Bot disconnected. Restarting in 10 seconds...');
+    setTimeout(createBot, 10000);
+  });
 }
 
 // Start the bot
-createAndConnectBot();
+createBot();
